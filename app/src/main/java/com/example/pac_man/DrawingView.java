@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -38,6 +39,7 @@ public class DrawingView extends SurfaceView implements Runnable {
     Bitmap map;
     Canvas canvas;
     SurfaceHolder surfaceHolder;
+    private MediaPlayer inicio,mover;
     private Paint paint;
     private int blockSize,screenWidth;
     private int totalFrame = 4;             // Total amount of frames fo each direction
@@ -51,6 +53,11 @@ public class DrawingView extends SurfaceView implements Runnable {
 
     public DrawingView(Context context,int x, int y ){
         super(context);
+        mover = MediaPlayer.create(context,R.raw.pacmanwaka);
+        mover.setVolume(100,100);
+        inicio = MediaPlayer.create(context,R.raw.songinicio);
+        inicio.setVolume(100,100);
+        inicio.start();
         paint=new Paint();
         this.context=context;
         frameTicker = 1000/totalFrame;
@@ -188,8 +195,10 @@ public class DrawingView extends SurfaceView implements Runnable {
         } else {
             if (xDiff < 0) {
                 pacman.setSigPos(3);
+                mover.pause();
             } else if (xDiff > 0) {
                 pacman.setSigPos(1);
+                mover.start();
             }
         }
     }
