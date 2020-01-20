@@ -17,10 +17,13 @@ public class Pacman {
         this.screenWidth=screenWidth;
         this.contextPlayAct=context;
         totalFrame=4;
-        posX = 8 * blockSize;
+        posX = 8 * blockSize; /*Como la pantalla se dividió en 17 bloques del mismo tamaño, para situarse
+                                en ella hay que simplemente multiplicar al X por ( tamBloque * cantColumnas)
+                                   y al Y por ( tamBloque*cantFilas) */
         posY= 13 * blockSize;
-        posActual = 3;
-        sigPos = 4;
+                            /*De esta manera el pacman comienza en la fila 13, columna 8 */
+        posActual = 3;        //esto es para que el pacman comienze mirando a la izquierda
+        sigPos = 3;
         crearBitmapImgPacman();
     }
 
@@ -43,6 +46,12 @@ public class Pacman {
                 break;
 
         }
+        /*Como en el metodo movement.movePacman() para realizar alguna accion se requiere que posX y posY sean
+        * multiplos de 60, es decir, sea un bloque, una posicion de la matriz, durante la transicion de un bloque
+        * a otro no deben realizarse cambios en la direccion que mira el pacman, para evitar eso, al haber 4 frames
+        * de movimiento se va incrementando/disminuyendo 1/4 de 60 a posX y posY, de esta manera se evitara que estas 2
+        * variables sean multiplos de 60, lo que permitira la transicion de los 4 frames sin cambiar de direccion la vista
+        * del pacman.*/
         movement.updatePacman();
     }
     private void crearBitmapImgPacman() {

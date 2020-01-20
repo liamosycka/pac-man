@@ -90,6 +90,13 @@ public class DrawingView extends SurfaceView implements Runnable {
             if(canvas!=null){
                 canvas.drawColor(Color.BLACK);
                 drawMap(canvas);
+                /*Hay que ver si se comio una pastilla, en caso positivo, hay que actualizar
+                * el mapa para que no se vuelva a dibujar esa pastilla.*/
+                if(movement.needMapRefresh()){
+                    movement.updateMap();
+                }
+
+                drawPellets(canvas,leveldata1,paint,blockSize);
                 pacman.drawPacman(canvas,context,paint,currentPacmanFrame,movement);
 
             }
@@ -199,6 +206,21 @@ public class DrawingView extends SurfaceView implements Runnable {
             } else if (xDiff > 0) {
                 pacman.setSigPos(1);
                 mover.start();
+            }
+        }
+    }
+    public static void drawPellets(Canvas canvas, short[][] currentMap, Paint paint, int blockSize) {
+        float x, y;
+        for (int i = 0; i < 18; i++) {
+            for (int j = 0; j < 17; j++) {
+                x = j * blockSize;
+                y = i * blockSize;
+                // Draws pellet in the middle of a block
+                /*Se verifica con 16 ya que las unicas posiciones que daran 0 en esta evaluacion
+                * son los bloques que tienen el valor 2 ( spawn del pacman) y 0 en la matriz.*/
+                if ((currentMap[i][j] & 16) != 0) {
+                    canvas.drawCircle(x + blockSize / 2, y + blockSize / 2, blockSize / 10, paint);
+                }
             }
         }
     }

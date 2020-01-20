@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Point;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.Display;
 import android.widget.Toast;
 
@@ -22,7 +23,11 @@ public class PlayActivity extends AppCompatActivity {
         display.getSize(size);
         drawV=new DrawingView(this,size.x,size.y);
         setContentView(drawV);
-        Toast.makeText(PlayActivity.this,"HOLA VOLVI",Toast.LENGTH_SHORT).show();
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int screenWidth = metrics.widthPixels;
+        int blockSize = screenWidth/17;
+        blockSize = (blockSize / 5) * 5;
+        Toast.makeText(PlayActivity.this,"screenwidht: "+screenWidth+"\n blocksize: "+blockSize,Toast.LENGTH_SHORT).show();
     }
 
 
