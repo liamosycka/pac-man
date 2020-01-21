@@ -18,17 +18,17 @@ public class DrawingView extends SurfaceView implements Runnable {
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
             {19, 26, 26, 18, 26, 26, 26, 22, 0, 19, 26, 26, 26, 18, 26, 26, 22},
-            {21, 0, 0, 21, 0, 0, 0, 21, 0, 21, 0, 0, 0, 21, 0, 0, 21},
+            {37, 0, 0, 21, 0, 0, 0, 21, 0, 21, 0, 0, 0, 21, 0, 0, 37},
             {17, 26, 26, 16, 26, 18, 26, 24, 26, 24, 26, 18, 26, 16, 26, 26, 20},
             {25, 26, 26, 20, 0, 25, 26, 22, 0, 19, 26, 28, 0, 17, 26, 26, 28},
             {0, 0, 0, 21, 0, 0, 0, 21, 0, 21, 0, 0, 0, 21, 0, 0, 0},
-            {0, 0, 0, 21, 0, 19, 26, 24, 26, 24, 26, 22, 0, 21, 0, 0, 0},
+            {0, 0, 0, 21, 0, 19, 26, 24, 18, 24, 26, 22, 0, 21, 0, 0, 0},
             {26, 26, 26, 16, 26, 20, 0, 0, 0, 0, 0, 17, 26, 16, 26, 26, 26},
-            {0, 0, 0, 21, 0, 17, 26, 26, 26, 26, 26, 20, 0, 21, 0, 0, 0},
-            {0, 0, 0, 21, 0, 21, 0, 0, 0, 0, 0, 21, 0, 21, 0, 0, 0},
-            {19, 26, 26, 16, 26, 24, 26, 22, 0, 19, 26, 24, 26, 16, 26, 26, 22},
+            {0, 0, 0, 21, 0, 17, 1, 0, 0, 0, 4, 20, 0, 21, 0, 0, 0},
+            {0, 0, 0, 21, 0, 21, 0, 0, 8, 0, 0, 21, 0, 21, 0, 0, 0},
+            {19, 26, 26, 16, 26, 24, 26, 18, 26, 18, 26, 24, 26, 16, 26, 26, 22},
             {21, 0, 0, 21, 0, 0, 0, 21, 0, 21, 0, 0, 0, 21, 0, 0, 21},
-            {25, 22, 0, 21, 0, 0, 0, 17, 2, 20, 0, 0, 0, 21, 0, 19, 28}, // "2" in this line is for
+            {41, 22, 0, 21, 0, 0, 0, 17, 2, 20, 0, 0, 0, 21, 0, 19, 44}, // "2" in this line is for
             {0, 21, 0, 17, 26, 26, 18, 24, 24, 24, 18, 26, 26, 20, 0, 21, 0}, // pacman's spawn
             {19, 24, 26, 28, 0, 0, 25, 18, 26, 18, 28, 0, 0, 25, 26, 24, 22},
             {21, 0, 0, 0, 0, 0, 0, 21, 0, 21, 0, 0, 0, 0, 0, 0, 21},
@@ -95,8 +95,12 @@ public class DrawingView extends SurfaceView implements Runnable {
                 if(movement.needMapRefresh()){
                     movement.updateMap();
                 }
+                if(movement.verifPowerUp()){
+                    movement.actualizarMapaPowerUp();
+                }
 
                 drawPellets(canvas,leveldata1,paint,blockSize);
+                drawPowerUp(canvas,leveldata1,paint,blockSize);
                 pacman.drawPacman(canvas,context,paint,currentPacmanFrame,movement);
 
             }
@@ -222,6 +226,40 @@ public class DrawingView extends SurfaceView implements Runnable {
                     canvas.drawCircle(x + blockSize / 2, y + blockSize / 2, blockSize / 10, paint);
                 }
             }
+        }
+    }
+    public static void drawPowerUp(Canvas canvas,short [][] currentMap,Paint paint,int blockSize){
+        int x,y;
+        paint.setColor(Color.YELLOW);
+        x=0;
+        y=3;
+        if((currentMap[y][x]&32)!=0){
+            y*=blockSize;
+            canvas.drawCircle(x+blockSize/2,y+blockSize/2,blockSize/3,paint);
+        }
+        x=16;
+        y=3;
+        if((currentMap[y][x]&32)!=0){
+            x=16*blockSize;
+            y*=blockSize;
+            canvas.drawCircle(x+blockSize/2,y+blockSize/2,blockSize/3,paint);
+        }
+        y=13;
+        x=0;
+        if((currentMap[y][x]&32)!=0){
+            y*=blockSize;
+            canvas.drawCircle(x+blockSize/2,y+blockSize/2,blockSize/3,paint);
+        }
+
+        y=13;
+
+
+        x=16;
+
+        if((currentMap[y][x]&32)!=0){
+            y*=blockSize;
+            x*=blockSize;
+            canvas.drawCircle(x+blockSize/2,y+blockSize/2,blockSize/3,paint);
         }
     }
 }

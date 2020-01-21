@@ -5,7 +5,7 @@ public class Movement {
     private int blockSize;
     private short [][] currentMap;
     private int swipeDir;
-    private boolean pelletEaten;
+    private boolean pelletEaten,powerUp;
 
     public Movement(final short [][] curMap, final int blockSize,Pacman pacM){
         currentMap = curMap;
@@ -18,6 +18,7 @@ public class Movement {
 
         swipeDir = 4;
         pelletEaten = false;
+        powerUp=false;
     }
 
 
@@ -51,6 +52,9 @@ public class Movement {
                 * se manda como paremetro la posActual elevado a la 16 para asegurar que en binario no haya un 1 en
                 * la posicion del 16 asi (posM & 16) siempre dara 0.*/
                 pelletWasEaten(yPosPacman / blockSize, xPosPacman / blockSize, (short) (ch ^ 16));
+            }
+            if((ch&32)!=0){
+                powerUpComido(yPosPacman/blockSize,xPosPacman/blockSize,(short)(ch^32));
             }
 
             // Checks for direction buffering
@@ -105,13 +109,26 @@ public class Movement {
         pelletEaten = false;
         return currentMap;
     }
+    public short[][] actualizarMapaPowerUp(){
+        powerUp=false;
+        return currentMap;
+    }
     private void pelletWasEaten(int x, int y, short value){
         /*Como el valor que llega como parametro es un multiplo de 16, eso hara que (al igual que
         * cuando en la matriz hay valor 2 o 0 ) no se dibuje una pastilla.*/
         currentMap[x][y] = value;
         pelletEaten = true;
     }
+    private void powerUpComido(int x, int y, short value){
+        /*Como el valor que llega como parametro no contiene un 1 en la posicion de 32, eso hara que (al igual que
+         * cuando en la matriz hay valor 2 o 0 ) no se dibuje una pastilla.*/
+        currentMap[x][y] = value;
+        powerUp = true;
+    }
     public boolean needMapRefresh(){
         return pelletEaten;
+    }
+    public boolean verifPowerUp(){
+        return powerUp;
     }
 }
