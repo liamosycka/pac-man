@@ -22,10 +22,10 @@ public class DrawingView extends SurfaceView implements Runnable {
             {17, 26, 26, 16, 26, 18, 26, 24, 26, 24, 26, 18, 26, 16, 26, 26, 20},
             {25, 26, 26, 20, 0, 25, 26, 22, 0, 19, 26, 28, 0, 17, 26, 26, 28},
             {0, 0, 0, 21, 0, 0, 0, 21, 0, 21, 0, 0, 0, 21, 0, 0, 0},
-            {0, 0, 0, 21, 0, 19, 26, 24, 18, 24, 26, 22, 0, 21, 0, 0, 0},
-            {26, 26, 26, 16, 26, 20, 0, 0, 0, 0, 0, 17, 26, 16, 26, 26, 26},
-            {0, 0, 0, 21, 0, 17, 1, 0, 0, 0, 4, 20, 0, 21, 0, 0, 0},
-            {0, 0, 0, 21, 0, 21, 0, 0, 8, 0, 0, 21, 0, 21, 0, 0, 0},
+            {0, 0, 0, 21, 0, 19, 26, 24, 258, 24, 26, 22, 0, 21, 0, 0, 0},
+            {26, 26, 26, 16, 26, 20, 3, 2, 0, 2, 6, 17, 26, 16, 26, 26, 26},
+            {0, 0, 0, 21, 0, 21, 1, 0, 0, 0, 4, 21, 0, 21, 0, 0, 0},
+            {0, 0, 0, 21, 0, 21, 9, 8, 8, 8, 12, 21, 0, 21, 0, 0, 0},
             {19, 26, 26, 16, 26, 24, 26, 18, 26, 18, 26, 24, 26, 16, 26, 26, 22},
             {21, 0, 0, 21, 0, 0, 0, 21, 0, 21, 0, 0, 0, 21, 0, 0, 21},
             {41, 22, 0, 21, 0, 0, 0, 17, 2, 20, 0, 0, 0, 21, 0, 19, 44}, // "2" in this line is for
@@ -36,7 +36,7 @@ public class DrawingView extends SurfaceView implements Runnable {
     };
     Thread thread=null;
     boolean canDraw=true;
-    Bitmap map;
+    Bitmap map,pacmanVida;
     Canvas canvas;
     SurfaceHolder surfaceHolder;
     private MediaPlayer inicio,mover;
@@ -46,10 +46,13 @@ public class DrawingView extends SurfaceView implements Runnable {
     private int currentPacmanFrame = 0;     // Current Pacman frame to draw
     private int viewDirection = 2;
     private Pacman pacman;
+    private Thread hiloClyde,hiloPinky;
     private long frameTicker;
     private Movement movement;
     private float x1, x2, y1, y2;           // Initial/Final positions of swipe
     private Context context;
+    private Clyde clyde;
+    private Pinky pinky;
 
     public DrawingView(Context context,int x, int y ){
         super(context);
@@ -68,11 +71,18 @@ public class DrawingView extends SurfaceView implements Runnable {
         surfaceHolder = getHolder();
         pacman=new Pacman(blockSize,screenWidth,context);
         movement=new Movement(leveldata1,blockSize,pacman);
+        clyde=new Clyde(blockSize,screenWidth,context,pacman,leveldata1);
+        pinky=new Pinky(blockSize,screenWidth,context,pacman,leveldata1);
+
 
 
 
         thread=new Thread(this);
         thread.start();
+        hiloClyde=new Thread(clyde);
+        hiloClyde.start();
+        hiloPinky=new Thread(pinky);
+        hiloPinky.start();
 
 
 
@@ -102,6 +112,27 @@ public class DrawingView extends SurfaceView implements Runnable {
                 drawPellets(canvas,leveldata1,paint,blockSize);
                 drawPowerUp(canvas,leveldata1,paint,blockSize);
                 pacman.drawPacman(canvas,context,paint,currentPacmanFrame,movement);
+                dibujarVidas();
+                if(Globals.getInstance().getReiniciarJuego()){
+                    clyde=new Clyde(blockSize,screenWidth,context,pacman,leveldata1);
+                    hiloClyde = new Thread(clyde);
+                    hiloClyde.start();
+                    pinky=new Pinky(blockSize,screenWidth,context,pacman,leveldata1);
+                    hiloPinky=new Thread(pinky);
+                    hiloPinky.start();
+                    pacman.setVida(pacman.getVida()-1);
+                    if(pacman.getVida()==0){
+                        //game over
+                    }
+                    Globals.getInstance().setReiniciarJuego(false);
+                }else{
+                    clyde.drawClyde(canvas,context,paint);
+                    pinky.drawPinky(canvas,context,paint);
+                }
+
+
+
+
 
             }
             updateFrame(System.currentTimeMillis());
@@ -206,10 +237,10 @@ public class DrawingView extends SurfaceView implements Runnable {
         } else {
             if (xDiff < 0) {
                 pacman.setSigPos(3);
-                mover.pause();
+
             } else if (xDiff > 0) {
                 pacman.setSigPos(1);
-                mover.start();
+
             }
         }
     }
@@ -260,6 +291,21 @@ public class DrawingView extends SurfaceView implements Runnable {
             y*=blockSize;
             x*=blockSize;
             canvas.drawCircle(x+blockSize/2,y+blockSize/2,blockSize/3,paint);
+        }
+    }
+
+    private void dibujarVidas(){
+        int vida = pacman.getVida();
+        int spriteSize = screenWidth/17;
+        spriteSize = (spriteSize / 5) * 5;
+        pacmanVida = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+                context.getResources(), R.drawable.pacman_right1), spriteSize, spriteSize, false);
+
+
+        for (int i=0;i<vida;i++){
+            int x = 19 * blockSize;
+            int y = i * blockSize;
+            canvas.drawBitmap(pacmanVida,y,x,paint);
         }
     }
 }

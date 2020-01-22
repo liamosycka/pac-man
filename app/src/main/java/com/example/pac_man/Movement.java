@@ -78,7 +78,8 @@ public class Movement {
             if ((swipeDir == 3 && (ch & 1) != 0) ||
                     (swipeDir == 1 && (ch & 4) != 0) ||
                     (swipeDir == 0 && (ch & 2) != 0) ||
-                    (swipeDir == 2 && (ch & 8) != 0)) {
+                    (swipeDir == 2 && (ch & 8) != 0)||
+                    (swipeDir==2&&(ch&256)!=0)){
                 swipeDir = 4;
             }
         }

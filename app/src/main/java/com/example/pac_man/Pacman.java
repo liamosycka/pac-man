@@ -8,12 +8,13 @@ import android.graphics.Paint;
 import android.util.DisplayMetrics;
 
 public class Pacman {
-    private int blockSize,posX,posY,posActual,sigPos,totalFrame,screenWidth;
+    private int blockSize,posX,posY,posActual,sigPos,totalFrame,screenWidth,vida;
     private Bitmap[] pacmanRight, pacmanDown, pacmanLeft, pacmanUp;
     private Context contextPlayAct;
 
     public Pacman(int blockS,int screenWidth,Context context){
         this.blockSize=blockS;
+        this.vida = 3;
         this.screenWidth=screenWidth;
         this.contextPlayAct=context;
         totalFrame=4;
@@ -100,6 +101,11 @@ public class Pacman {
                 contextPlayAct.getResources(), R.drawable.pacman_up), spriteSize, spriteSize, false);
     }
 
+    public void muerte(){
+        posX = 8 * blockSize;
+        posY = 13 * blockSize;
+    }
+
     public int getBlockSize() {
         return blockSize;
     }
@@ -147,6 +153,15 @@ public class Pacman {
     public void setTotalFrame(int totalFrame) {
         this.totalFrame = totalFrame;
     }
+
+    public int getVida(){
+        return this.vida;
+    }
+
+    public void setVida(int nuevaVida){
+        this.vida=nuevaVida;
+    }
+
 }
 
 
