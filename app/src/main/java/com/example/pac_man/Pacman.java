@@ -11,9 +11,11 @@ public class Pacman {
     private int blockSize,posX,posY,posActual,sigPos,totalFrame,screenWidth,vida;
     private Bitmap[] pacmanRight, pacmanDown, pacmanLeft, pacmanUp;
     private Context contextPlayAct;
+    private boolean powerUp;
 
     public Pacman(int blockS,int screenWidth,Context context){
         this.blockSize=blockS;
+        this.powerUp=false;
         this.vida = 3;
         this.screenWidth=screenWidth;
         this.contextPlayAct=context;
@@ -24,7 +26,7 @@ public class Pacman {
         posY= 13 * blockSize;
                             /*De esta manera el pacman comienza en la fila 13, columna 8 */
         posActual = 3;        //esto es para que el pacman comienze mirando a la izquierda
-        sigPos = 3;
+        sigPos = 4;
         crearBitmapImgPacman();
     }
 
@@ -104,6 +106,14 @@ public class Pacman {
     public void muerte(){
         posX = 8 * blockSize;
         posY = 13 * blockSize;
+    }
+
+    public boolean getPowerUp() {
+        return powerUp;
+    }
+
+    public void setPowerUp(boolean powerUp) {
+        this.powerUp = powerUp;
     }
 
     public int getBlockSize() {

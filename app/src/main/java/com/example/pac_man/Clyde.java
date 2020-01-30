@@ -20,7 +20,7 @@ public class Clyde implements Runnable{
     private Paint paint;
     private Canvas canvas;
     private boolean comenzar,reiniciar;
-    private Bitmap bitClydeUp,bitClydeLeft,bitClydeDown,bitClydeRight;
+    private Bitmap bitClyde,bitClydeAzul;
     private short[][] map;
     public Clyde(int blockSize, int screenWidth, Context context ,Pacman pacman,short[][] map){
         this.blockSize=blockSize;
@@ -35,7 +35,7 @@ public class Clyde implements Runnable{
         posActual=0;
         sigPos=0;
 
-        crearBitmapClyde();
+        crearBitmapsClyde();
     }
     public void run(){
 
@@ -68,29 +68,22 @@ public class Clyde implements Runnable{
 
     public void drawClyde (Canvas canvas,Context context,Paint paint) {
         moveClyde();
-        switch (this.posActual) {
-            case (0):
-                canvas.drawBitmap(bitClydeUp, posX, posY, paint);
-                break;
-            case (1):
-                canvas.drawBitmap(bitClydeRight, posX, posY, paint);
-                break;
-            case (2):
-                canvas.drawBitmap(bitClydeDown, posX, posY, paint);
-                break;
-            case (3):
-                canvas.drawBitmap(bitClydeLeft, posX, posY, paint);
-                break;
+        canvas.drawBitmap(bitClyde, posX, posY, paint);
+        chocarPacman();
+        updateClyde();
 
-        }
+    }
+    public void drawClydeAzul (Canvas canvas,Context context,Paint paint) {
+        moveClyde();
+        canvas.drawBitmap(bitClydeAzul, posX, posY, paint);
         chocarPacman();
         updateClyde();
 
     }
 
-    public void chocarPacman(){
-        if(((posX/blockSize) == (pacman.getPosX()/blockSize))&&
-              ((posY/blockSize) == (pacman.getPosY()/blockSize))){
+    public void chocarPacman() {
+        if (((posX / blockSize) == (pacman.getPosX() / blockSize)) &&
+                ((posY / blockSize) == (pacman.getPosY() / blockSize)) && !pacman.getPowerUp()) {
             pacman.muerte();
             this.posX = 6 * blockSize;
             this.posY = 9 * blockSize;
@@ -98,7 +91,21 @@ public class Clyde implements Runnable{
             posActual = 0;
 
         }
+        if (((posX / blockSize) == (pacman.getPosX() / blockSize)) &&
+                ((posY / blockSize) == (pacman.getPosY() / blockSize)) && pacman.getPowerUp()) {
+            //el pacman tiene el power up
+            this.posX = 6 * blockSize;
+            this.posY = 9 * blockSize;
+            posActual = 0;
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
+
 
     private void moveClyde() {
         int ch;
@@ -151,17 +158,14 @@ public class Clyde implements Runnable{
             this.setPosX(posX + -blockSize / 20);
         }
     }
-    private void crearBitmapClyde(){
+    private void crearBitmapsClyde(){
         int spriteSize = screenWidth/17;        // Size of Pacman & Ghost
         spriteSize = (spriteSize / 5) * 5;      // Keep it a multiple of 5
-        bitClydeUp= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+        bitClyde= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 context.getResources(), R.drawable.clyde), spriteSize, spriteSize, false);
-        bitClydeLeft= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
-                context.getResources(), R.drawable.clyde), spriteSize, spriteSize, false);
-        bitClydeDown= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
-                context.getResources(), R.drawable.clyde), spriteSize, spriteSize, false);
-        bitClydeRight= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
-                context.getResources(), R.drawable.clyde), spriteSize, spriteSize, false);
+
+        bitClydeAzul= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+                context.getResources(), R.drawable.blue_ghost), spriteSize, spriteSize, false);
     }
     public void setComenzar(boolean comenzar){
         this.comenzar=comenzar;

@@ -1,6 +1,7 @@
 package com.example.pac_man;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -45,17 +46,20 @@ public class DrawingView extends SurfaceView implements Runnable {
     private int totalFrame = 4;             // Total amount of frames fo each direction
     private int currentPacmanFrame = 0;     // Current Pacman frame to draw
     private int viewDirection = 2;
+    private int score;
     private Pacman pacman;
-    private Thread hiloClyde,hiloPinky;
+    private Thread hiloGhost;
     private long frameTicker;
     private Movement movement;
     private float x1, x2, y1, y2;           // Initial/Final positions of swipe
     private Context context;
     private Clyde clyde;
     private Pinky pinky;
+    private Ghost[] arrGhosts;
 
     public DrawingView(Context context,int x, int y ){
         super(context);
+        arrGhosts=new Ghost[4];
         mover = MediaPlayer.create(context,R.raw.pacmanwaka);
         mover.setVolume(100,100);
         inicio = MediaPlayer.create(context,R.raw.songinicio);
@@ -70,19 +74,14 @@ public class DrawingView extends SurfaceView implements Runnable {
         blockSize = (blockSize / 5) * 5;
         surfaceHolder = getHolder();
         pacman=new Pacman(blockSize,screenWidth,context);
-        movement=new Movement(leveldata1,blockSize,pacman);
-        clyde=new Clyde(blockSize,screenWidth,context,pacman,leveldata1);
-        pinky=new Pinky(blockSize,screenWidth,context,pacman,leveldata1);
-
+        iniciarFantasmas();
+        movement=new Movement(leveldata1,blockSize,pacman,arrGhosts);
+        contarPellets(leveldata1,blockSize);
 
 
 
         thread=new Thread(this);
         thread.start();
-        hiloClyde=new Thread(clyde);
-        hiloClyde.start();
-        hiloPinky=new Thread(pinky);
-        hiloPinky.start();
 
 
 
@@ -109,25 +108,51 @@ public class DrawingView extends SurfaceView implements Runnable {
                     movement.actualizarMapaPowerUp();
                 }
 
+                int pellets = Globals.getInstance().getCantidadPellets();
                 drawPellets(canvas,leveldata1,paint,blockSize);
                 drawPowerUp(canvas,leveldata1,paint,blockSize);
                 pacman.drawPacman(canvas,context,paint,currentPacmanFrame,movement);
                 dibujarVidas();
+                score = Globals.getInstance().getScore();
+                paint.setTextSize(60f);
+                canvas.drawText("Score: " + score,8 * blockSize,19 * blockSize,paint);
                 if(Globals.getInstance().getReiniciarJuego()){
-                    clyde=new Clyde(blockSize,screenWidth,context,pacman,leveldata1);
-                    hiloClyde = new Thread(clyde);
-                    hiloClyde.start();
-                    pinky=new Pinky(blockSize,screenWidth,context,pacman,leveldata1);
-                    hiloPinky=new Thread(pinky);
-                    hiloPinky.start();
+                    for(int i=0;i<arrGhosts.length;i++){
+                        arrGhosts[i].setReset(true);
+                        iniciarFantasmas();
+                    }
                     pacman.setVida(pacman.getVida()-1);
                     if(pacman.getVida()==0){
                         //game over
                     }
                     Globals.getInstance().setReiniciarJuego(false);
                 }else{
-                    clyde.drawClyde(canvas,context,paint);
-                    pinky.drawPinky(canvas,context,paint);
+                    //vemos si el pacman tiene el powerUp activo
+                    if(pacman.getPowerUp()){
+                        for(int i=0;i<arrGhosts.length;i++){
+                            if(arrGhosts[i].getVulnerable()) {
+                                arrGhosts[i].drawGhostAzul(canvas, context, paint, movement);
+                            }else{
+                                arrGhosts[i].drawGhost(canvas,context,paint,movement);
+
+                            }
+                            if(arrGhosts[i].getReset()){
+
+                                arrGhosts[i]=new Ghost(blockSize,screenWidth,context,pacman,leveldata1,i);
+
+                                hiloGhost=new Thread(arrGhosts[i]);
+                                hiloGhost.start();
+                            }
+
+
+                        }
+                    }else{
+                        for(int i=0;i<arrGhosts.length;i++){
+                            arrGhosts[i].drawGhost(canvas,context,paint,movement);
+                        }
+
+                    }
+
                 }
 
 
@@ -136,10 +161,22 @@ public class DrawingView extends SurfaceView implements Runnable {
 
             }
             updateFrame(System.currentTimeMillis());
-
+            verificarVictoria();
+            verificarDerrota();
 
             surfaceHolder.unlockCanvasAndPost(canvas);
 
+        }
+    }
+    private void iniciarFantasmas(){
+        for(int i=0;i<arrGhosts.length;i++){
+            Ghost ghost=new Ghost(blockSize,screenWidth,context,pacman,leveldata1,i);
+
+            arrGhosts[i]=ghost;
+        }
+        for(int i=0;i<arrGhosts.length;i++){
+            hiloGhost = new Thread(arrGhosts[i]);
+            hiloGhost.start();
         }
     }
 
@@ -185,7 +222,12 @@ public class DrawingView extends SurfaceView implements Runnable {
                             x + blockSize, y, x + blockSize, y + blockSize - 1, paint);
                 if ((leveldata1[i][j] & 8) != 0) // draws bottom
                     canvas.drawLine(
-                            x, y + blockSize, x + blockSize - 1, y + blockSize , paint);
+                            x, y + blockSize, x + blockSize - 1, y + blockSize, paint);
+                if ((leveldata1[i][j] & 256) != 0){//dibuja linea blanca de entrada a caja de ghosts
+                    paint.setColor(Color.WHITE);
+                canvas.drawLine(x, y + blockSize, x + blockSize - 1, y + blockSize, paint);
+                paint.setColor(Color.BLUE);
+            }
             }
         }
         paint.setColor(Color.WHITE);
@@ -294,6 +336,23 @@ public class DrawingView extends SurfaceView implements Runnable {
         }
     }
 
+    public static void contarPellets(short[][] currentMap,int blockSize) {
+        float x, y;
+        int cantidadPellets=0;
+        for (int i = 0; i < 18; i++) {
+            for (int j = 0; j < 17; j++) {
+                x = j * blockSize;
+                y = i * blockSize;
+
+                if ((currentMap[i][j] & 16) != 0) {
+                    cantidadPellets++;
+                }
+            }
+        }
+        cantidadPellets+=4;
+        Globals.getInstance().setCantidadPellets(cantidadPellets);
+    }
+
     private void dibujarVidas(){
         int vida = pacman.getVida();
         int spriteSize = screenWidth/17;
@@ -306,6 +365,23 @@ public class DrawingView extends SurfaceView implements Runnable {
             int x = 19 * blockSize;
             int y = i * blockSize;
             canvas.drawBitmap(pacmanVida,y,x,paint);
+        }
+    }
+
+    private void verificarVictoria(){
+        int cantidadPellets = Globals.getInstance().getCantidadPellets();
+        if(cantidadPellets==0){
+            Intent victoria = new Intent(context,MainActivity.class);
+           context.startActivity(victoria);
+
+        }
+    }
+
+    private void verificarDerrota(){
+        if(pacman.getVida()==0){
+            Intent derrota = new Intent(context,MainActivity.class);
+            context.startActivity(derrota);
+
         }
     }
 }

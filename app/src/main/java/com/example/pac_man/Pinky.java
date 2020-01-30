@@ -78,6 +78,27 @@ public class Pinky implements Runnable{
         }
         updatePinky();
     }
+    public void drawPinkyAzul (Canvas canvas,Context context,Paint paint) {
+        movePinky();
+        switch (this.posActual) {
+            case (0):
+                canvas.drawBitmap(bitPinkyUp, posX, posY, paint);
+                break;
+            case (1):
+                canvas.drawBitmap(bitPinkyRight, posX, posY, paint);
+                break;
+            case (2):
+                canvas.drawBitmap(bitPinkyDown, posX, posY, paint);
+                break;
+            case (3):
+                canvas.drawBitmap(bitPinkyLeft, posX, posY, paint);
+                break;
+
+        }
+
+        updatePinky();
+
+    }
     private void movePinky() {
         int ch;
 

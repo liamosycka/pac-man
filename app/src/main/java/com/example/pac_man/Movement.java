@@ -1,16 +1,21 @@
 package com.example.pac_man;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class Movement {
     private Pacman pacman;
     private int blockSize;
     private short [][] currentMap;
     private int swipeDir;
     private boolean pelletEaten,powerUp;
+    private Ghost[] arrGhosts;
 
-    public Movement(final short [][] curMap, final int blockSize,Pacman pacM){
+    public Movement(final short [][] curMap, final int blockSize,Pacman pacM,Ghost[] ghosts){
         currentMap = curMap;
         this.blockSize = blockSize;
         this.pacman = pacM;
+        this.arrGhosts=ghosts;
        // ghost0 = new Ghost(blockSize);
        // ghost1 = new Ghost(blockSize);
        // ghost2 = new Ghost(blockSize);
@@ -54,7 +59,7 @@ public class Movement {
                 pelletWasEaten(yPosPacman / blockSize, xPosPacman / blockSize, (short) (ch ^ 16));
             }
             if((ch&32)!=0){
-                powerUpComido(yPosPacman/blockSize,xPosPacman/blockSize,(short)(ch^32));
+                powerUpComido(yPosPacman/blockSize,xPosPacman/blockSize,(short)(ch^32),8);
             }
 
             // Checks for direction buffering
@@ -106,6 +111,88 @@ public class Movement {
             pacman.setPosX(pacman.getPosX() + -blockSize/15);
         }
     }
+    public void moveGhost(Ghost ghost) {
+        int ch;
+        int posX=ghost.getPosX();
+        int posY=ghost.getPosY();
+        int sigPos=ghost.getSigPos();
+
+        if ((posX % blockSize == 0) && (posY % blockSize == 0)) {
+            if (posX >= blockSize * 17) {
+                ghost.setPosX(0);
+
+            }
+
+            // Is used to find the number in the level array in order to
+            // check wall placement, pellet placement, and candy placement
+            ch = currentMap[posY / blockSize][posX / blockSize];
+
+
+            if (!((sigPos == 3 && (ch & 1) != 0) ||
+                    (sigPos == 1 && (ch & 4) != 0) ||
+                    (sigPos == 0 && (ch & 2) != 0) ||
+                    (sigPos == 2 && (ch & 8) != 0))) {
+                ghost.setPosActual(sigPos);
+                ghost.setDireccion(sigPos);
+            }
+
+            // Checks for wall collisions
+            /*Aqui se verifica si en la direccion que el pacman se esta por mover, HAY una pared, ya que,
+             * al ser por ej swipeDir==1 ( el pacman se mueve a la derecha) verifica si la posicion actual
+             * de la matriz ( pos donde esta el pacman) se le ha dibujado una pared a la derecha , en caso afirmativo
+             * se le asignara a swipeDir=4, que significa que no se mueva ( no hay caso en el switch para 4, en drawPacman) */
+            int direccion=ghost.getDireccion();
+            if ((direccion == 3 && (ch & 1) != 0) ||
+                    (direccion == 1 && (ch & 4) != 0) ||
+                    (direccion == 0 && (ch & 2) != 0) ||
+                    (direccion == 2 && (ch & 8) != 0) ||
+                    (direccion==2&&(ch&256)!=0)) {
+                ghost.setDireccion(4);
+            }
+        }
+        if (posX < 0) {
+            ghost.setPosX(blockSize * 17);
+        }
+    }
+    public void updateGhost(Ghost ghost){
+        int direccion=ghost.getDireccion();
+        int posX=ghost.getPosX();
+        int posY=ghost.getPosY();
+        if (direccion == 0) {
+            ghost.setPosY(posY + -blockSize / 20);
+
+        } else if (direccion == 1) {
+            ghost.setPosX(posX + blockSize / 20);
+        } else if (direccion == 2) {
+            ghost.setPosY(posY + blockSize / 20);
+        } else if (direccion == 3) {
+            ghost.setPosX(posX + -blockSize / 20);
+        }
+    }
+    public void chocarPacman(Ghost ghost) {
+        int posX=ghost.getPosX();
+        int posY=ghost.getPosY();
+        int posActual=ghost.getPosActual();
+
+        if (((posX / blockSize) == (pacman.getPosX() / blockSize)) &&
+                ((posY / blockSize) == (pacman.getPosY() / blockSize)) && !pacman.getPowerUp()) {
+            pacman.muerte();
+
+            Globals.getInstance().setReiniciarJuego(true);
+
+        }
+        if (((posX / blockSize) == (pacman.getPosX() / blockSize)) &&
+                ((posY / blockSize) == (pacman.getPosY() / blockSize)) && pacman.getPowerUp()) {
+            //el pacman tiene el power up
+            ghost.setVulnerable(false);
+            ghost.setReset(true);
+            Globals.getInstance().setGhostComido(ghost.getTipoGhost(),true);
+            Globals.getInstance().aumentarScore(200);
+
+
+        }
+    }
+
     public short[][] updateMap(){
         pelletEaten = false;
         return currentMap;
@@ -119,12 +206,30 @@ public class Movement {
         * cuando en la matriz hay valor 2 o 0 ) no se dibuje una pastilla.*/
         currentMap[x][y] = value;
         pelletEaten = true;
+        Globals.getInstance().aumentarScore(10);
+        Globals.getInstance().disminuirPellet(1);
     }
-    private void powerUpComido(int x, int y, short value){
+    private void powerUpComido(int x, int y, short value,int duracionSeg) {
         /*Como el valor que llega como parametro no contiene un 1 en la posicion de 32, eso hara que (al igual que
          * cuando en la matriz hay valor 2 o 0 ) no se dibuje una pastilla.*/
-        currentMap[x][y] = value;
-        powerUp = true;
+        if (!pacman.getPowerUp()) {
+
+            Globals.getInstance().aumentarScore(50);
+            Globals.getInstance().disminuirPellet(1);
+            currentMap[x][y] = value;
+            pacman.setPowerUp(true);
+            for(int i=0;i<arrGhosts.length;i++){
+                arrGhosts[i].setVulnerable(true);
+                Globals.getInstance().setGhostComido(i,false);
+            }
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    pacman.setPowerUp(false);
+
+                }
+            }, duracionSeg*1000);
+        }
     }
     public boolean needMapRefresh(){
         return pelletEaten;
