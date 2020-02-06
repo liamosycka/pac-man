@@ -1,9 +1,9 @@
 package com.example.pac_man;
 
 public class Globals {
-    private boolean reiniciarJuego;
+    private boolean reiniciarJuego,frutaActiva;
     private static Globals instance;
-    private int score,cantidadPellets;
+    private int score,cantidadPellets,tiempoPowerUp;
     private static boolean clydeComido,pinkyComido,inkyComido,blinkyComido;
 
     public Globals(){
@@ -12,8 +12,17 @@ public class Globals {
         this.inkyComido=false;
         this.blinkyComido=false;
         this.score=0;
+        this.frutaActiva=false;
 
     }
+    public void setFrutaActiva(boolean frutaActiva){
+        this.frutaActiva=frutaActiva;
+    }
+    public boolean getFrutaActiva(){
+        return this.frutaActiva;
+    }
+
+
     public boolean getReiniciarJuego(){
         return this.reiniciarJuego;
     }

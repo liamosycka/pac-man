@@ -2,6 +2,7 @@ package com.example.pac_man;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Movement {
     private Pacman pacman;
@@ -10,6 +11,7 @@ public class Movement {
     private int swipeDir;
     private boolean pelletEaten,powerUp;
     private Ghost[] arrGhosts;
+    private AtomicInteger varAtomic;
 
     public Movement(final short [][] curMap, final int blockSize,Pacman pacM,Ghost[] ghosts){
         currentMap = curMap;
@@ -24,6 +26,7 @@ public class Movement {
         swipeDir = 4;
         pelletEaten = false;
         powerUp=false;
+        varAtomic=new AtomicInteger();
     }
 
 
@@ -60,6 +63,11 @@ public class Movement {
             }
             if((ch&32)!=0){
                 powerUpComido(yPosPacman/blockSize,xPosPacman/blockSize,(short)(ch^32),8);
+            }
+            if((ch&512)!=0){
+                Globals.getInstance().setFrutaActiva(false);
+                Globals.getInstance().aumentarScore(100);
+                currentMap[yPosPacman/blockSize][xPosPacman/blockSize]=1026;
             }
 
             // Checks for direction buffering
@@ -119,6 +127,7 @@ public class Movement {
 
         if ((posX % blockSize == 0) && (posY % blockSize == 0)) {
             if (posX >= blockSize * 17) {
+                posX=0;
                 ghost.setPosX(0);
 
             }
@@ -182,12 +191,18 @@ public class Movement {
 
         }
         if (((posX / blockSize) == (pacman.getPosX() / blockSize)) &&
-                ((posY / blockSize) == (pacman.getPosY() / blockSize)) && pacman.getPowerUp()) {
-            //el pacman tiene el power up
-            ghost.setVulnerable(false);
-            ghost.setReset(true);
-            Globals.getInstance().setGhostComido(ghost.getTipoGhost(),true);
-            Globals.getInstance().aumentarScore(200);
+                ((posY / blockSize) == (pacman.getPosY() / blockSize))) {
+            if(pacman.getPowerUp()&&ghost.getVulnerable()){
+                //el pacman tiene el power up
+                ghost.setVulnerable(false);
+                ghost.setReset(true);
+                Globals.getInstance().setGhostComido(ghost.getTipoGhost(),true);
+                Globals.getInstance().aumentarScore(200);
+            }else{
+                pacman.muerte();
+                Globals.getInstance().setReiniciarJuego(true);
+            }
+
 
 
         }
@@ -231,6 +246,7 @@ public class Movement {
             }, duracionSeg*1000);
         }
     }
+
     public boolean needMapRefresh(){
         return pelletEaten;
     }
