@@ -8,15 +8,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.media.MediaPlayer;
-import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.widget.Toast;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class DrawingView extends SurfaceView implements Runnable {
 
@@ -40,41 +35,32 @@ public class DrawingView extends SurfaceView implements Runnable {
             {21, 0, 0, 0, 0, 0, 0, 21, 0, 21, 0, 0, 0, 0, 0, 0, 21},
             {25, 26, 26, 26, 26, 26, 26, 24, 26, 24, 26, 26, 26, 26, 26, 26, 28},
     };
-    Thread thread = null;
     boolean canDraw = true;
-    private boolean frutaActiva=false;
     Canvas canvas;
+    final int cantGhosts = 4;
     SurfaceHolder surfaceHolder;
     private MediaPlayer inicio, mover;
     private Paint paint;
-    private int blockSize, screenWidth;
-    private int totalFrame = 4;             // Total amount of frames fo each direction
-    private int currentPacmanFrame = 0;     // Current Pacman frame to draw
-    private int viewDirection = 2;
-    private int score,timerFruta=0;
+    private int blockSize, screenWidth, score, timerFruta = 0;
+    private int totalFrame = 4;             // cantidad de frames para el pacman por movimiento
+    private int currentPacmanFrame = 0;     // frame inicial para el pacman
     private Pacman pacman;
-    private Thread hiloGhost;
+    private Thread hiloGhost, thread;
     private long frameTicker;
     private Movement movement;
-    private float x1, x2, y1, y2;           // Initial/Final positions of swipe
+    private float x1, x2, y1, y2;           //variables para calcular la direccion del swipe
     private Context context;
     private Ghost[] arrGhosts;
-    private CountDownTimer timer;
-    private Bitmap fruta,pacmanVida;
+    private Bitmap fruta, pacmanVida;
 
-    public DrawingView(Context context, int x, int y) {
+
+    public DrawingView(Context context) {
         super(context);
-        arrGhosts = new Ghost[4];
-        mover = MediaPlayer.create(context, R.raw.pacmanwaka);
-        mover.setVolume(100, 100);
-
-        inicio = MediaPlayer.create(context, R.raw.songinicio);
-        inicio.setVolume(100, 100);
-        inicio.start();
-
+        arrGhosts = new Ghost[cantGhosts];
+        //iniciarSonido();
         paint = new Paint();
         this.context = context;
-        frameTicker = 1000 / totalFrame;
+        frameTicker = 1000 / totalFrame; //para saber cuando se actualizo por ultima vez el frame
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         screenWidth = metrics.widthPixels;
         blockSize = screenWidth / 17;
@@ -88,7 +74,8 @@ public class DrawingView extends SurfaceView implements Runnable {
         thread = new Thread(this);
         thread.start();
     }
-    public void crearBitmaps(){
+
+    public void crearBitmaps() {
         int spriteSize = screenWidth / 17;
         spriteSize = (spriteSize / 5) * 5;
         fruta = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
@@ -97,13 +84,9 @@ public class DrawingView extends SurfaceView implements Runnable {
                 context.getResources(), R.drawable.pacman_right1), spriteSize, spriteSize, false);
 
     }
-
-
     @Override
     public void run() {
-
         while (canDraw) {
-
             if (!surfaceHolder.getSurface().isValid()) {
                 continue;
             }
@@ -112,16 +95,6 @@ public class DrawingView extends SurfaceView implements Runnable {
             if (canvas != null) {
                 canvas.drawColor(Color.BLACK);
                 drawMap(canvas);
-                /*Hay que ver si se comio una pastilla, en caso positivo, hay que actualizar
-                 * el mapa para que no se vuelva a dibujar esa pastilla.*/
-                if (movement.needMapRefresh()) {
-                    movement.updateMap();
-                }
-                //borrar no sirve
-                if (movement.verifPowerUp()) {
-                    movement.actualizarMapaPowerUp();
-                }
-
                 drawPellets(canvas, map, paint, blockSize);
                 drawPowerUp(canvas, map, paint, blockSize);
                 pacman.drawPacman(canvas, context, paint, currentPacmanFrame, movement);
@@ -129,7 +102,7 @@ public class DrawingView extends SurfaceView implements Runnable {
                 score = Globals.getInstance().getScore();
                 paint.setTextSize(60f);
                 canvas.drawText("Score: " + score, 7 * blockSize, 22 * blockSize, paint);
-
+                //verifica si el pacman choco un fantasma
                 if (Globals.getInstance().getReiniciarJuego()) {
                     for (int i = 0; i < arrGhosts.length; i++) {
                         arrGhosts[i].setReset(true);
@@ -137,7 +110,7 @@ public class DrawingView extends SurfaceView implements Runnable {
                     }
                     pacman.setVida(pacman.getVida() - 1);
                     if (pacman.getVida() == 0) {
-                        //game over
+                        //game over ver que hacer
                     }
                     Globals.getInstance().setReiniciarJuego(false);
                 } else {
@@ -148,43 +121,33 @@ public class DrawingView extends SurfaceView implements Runnable {
                                 arrGhosts[i].drawGhostAzul(canvas, context, paint, movement);
                             } else {
                                 arrGhosts[i].drawGhost(canvas, context, paint, movement);
-
                             }
+                            //verifica si el fantasma fue comido y hay que resetearlo
                             if (arrGhosts[i].getReset()) {
-
-                                arrGhosts[i] = new Ghost(blockSize, screenWidth, context, pacman, map, i);
-
+                                arrGhosts[i] = new Ghost(blockSize, screenWidth, context, pacman, i);
                                 hiloGhost = new Thread(arrGhosts[i]);
                                 hiloGhost.start();
                             }
-
-
                         }
                     } else {
                         for (int i = 0; i < arrGhosts.length; i++) {
                             arrGhosts[i].drawGhost(canvas, context, paint, movement);
                         }
-
                     }
-
                 }
-
-
             }
-            if(Globals.getInstance().getFrutaActiva()){
+            if (Globals.getInstance().getFrutaActiva()) {
                 dibujarFruta();
-            }else{
+            } else {
                 timerFruta++;
-
             }
-
-            if(timerFruta==400){
-                timerFruta=0;
-                map[13][8]=514;
+            if (timerFruta == 400) {
+                timerFruta = 0;
+                map[13][8] = 514;     //se le asigna el valor correspondiente a que la fruta esta activa
                 Globals.getInstance().setFrutaActiva(true);
             }
             updateFrame(System.currentTimeMillis());
-            //hacer un solo metodo?
+            //se resolvio hacer 1 solo metodo verificarSituacion que haga ambas
             verificarVictoria();
             verificarDerrota();
 
@@ -192,27 +155,8 @@ public class DrawingView extends SurfaceView implements Runnable {
 
         }
     }
-  /*  private void comenzarTimerFruta(){
-        new Thread(new Runnable(){
-            @Override
-            public void run() {
-                while(canDraw){
-                    if(!frutaActiva){
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        frutaActiva=true;
-                    }
-                }
-            }
-        }).start();
-
-    }*/
 
     private void dibujarFruta() {
-
         int x = 8 * blockSize;
         int y = 13 * blockSize;
         canvas.drawBitmap(fruta, x, y, paint);
@@ -220,7 +164,7 @@ public class DrawingView extends SurfaceView implements Runnable {
 
     private void iniciarFantasmas() {
         for (int i = 0; i < arrGhosts.length; i++) {
-            Ghost ghost = new Ghost(blockSize, screenWidth, context, pacman, map, i);
+            Ghost ghost = new Ghost(blockSize, screenWidth, context, pacman, i);
             arrGhosts[i] = ghost;
         }
         for (int i = 0; i < arrGhosts.length; i++) {
@@ -229,18 +173,14 @@ public class DrawingView extends SurfaceView implements Runnable {
         }
     }
 
-    public void onResume() {
-        thread = new Thread(this);
-        thread.start();
-    }
+
 
     private void updateFrame(long gameTime) {
-        // If enough time has passed go to next frame
+        // verifica si ha pasado el tiempo suficiente para ir al siguiente frame
         if (gameTime > frameTicker + (totalFrame * 30)) {
             frameTicker = gameTime;
-            // Increment the frame
             currentPacmanFrame++;
-            // Loop back the frame when you have gone through all the frames
+            // si ya se visitaron todos los frames posibles, se vuelve al inicio
             if (currentPacmanFrame >= totalFrame) {
                 currentPacmanFrame = 0;
             }
@@ -250,22 +190,21 @@ public class DrawingView extends SurfaceView implements Runnable {
     public void drawMap(Canvas canvas) {
         paint.setColor(Color.BLUE);
         paint.setStrokeWidth(2.5f);
-        int x;
-        int y;
+        int x, y;
         for (int i = 0; i < 18; i++) {
             for (int j = 0; j < 17; j++) {
                 x = j * blockSize;
                 y = i * blockSize;
-                if ((map[i][j] & 1) != 0) // draws left
+                if ((map[i][j] & 1) != 0) // dibuja una pared a la izquierda
                     canvas.drawLine(x, y, x, y + blockSize - 1, paint);
 
-                if ((map[i][j] & 2) != 0) // draws top
+                if ((map[i][j] & 2) != 0) // dibuja una pared arriba
                     canvas.drawLine(x, y, x + blockSize - 1, y, paint);
 
-                if ((map[i][j] & 4) != 0) // draws right
+                if ((map[i][j] & 4) != 0) // dibuja una pared a la derecha
                     canvas.drawLine(
                             x + blockSize, y, x + blockSize, y + blockSize - 1, paint);
-                if ((map[i][j] & 8) != 0) // draws bottom
+                if ((map[i][j] & 8) != 0) // dibuja una pared abajo
                     canvas.drawLine(
                             x, y + blockSize, x + blockSize - 1, y + blockSize, paint);
                 if ((map[i][j] & 256) != 0) {//dibuja linea blanca de entrada a caja de ghosts
@@ -281,11 +220,15 @@ public class DrawingView extends SurfaceView implements Runnable {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
+            /*indica que ha comenzado una accion en el tactil,
+             * indicando la posicion inicial donde se origino*/
             case (MotionEvent.ACTION_DOWN): {
                 x1 = event.getX();
                 y1 = event.getY();
                 break;
             }
+            /*indica que ha finalizado la accion en el tactil,
+             * indicando la posicion final donde finalizo*/
             case (MotionEvent.ACTION_UP): {
                 x2 = event.getX();
                 y2 = event.getY();
@@ -296,36 +239,37 @@ public class DrawingView extends SurfaceView implements Runnable {
         return true;
     }
 
-    // Calculates which direction the user swipes
-    // based on calculating the differences in
-    // initial position vs final position of the swipe
+    /*utilizando los valores de posicion inicial y final de la accion,
+     * se determina la direccion del swipe */
     private void calculateSwipeDirection() {
         float xDiff = (x2 - x1);
         float yDiff = (y2 - y1);
 
-        // Directions
-        // 0 means going up
-        // 1 means going right
-        // 2 means going down
-        // 3 means going left
-        // 4 means stop moving, look at move function
-
-        // Checks which axis has the greater distance
-        // in order to see which direction the swipe is
-        // going to be (buffering of direction)
+        /* Direcciones:
+         0 : Arriba
+         1: Derecha
+         2: Abajo
+         3: Izquierda
+         4: Detenerse, direccion invalida/*
+         */
         if (Math.abs(yDiff) > Math.abs(xDiff)) {
+            //significa que el swipe fue vertical
             if (yDiff < 0) {
+                //el swipe fue para arriba
                 pacman.setSigPos(0);
             } else if (yDiff > 0) {
+                //el swipe fue para abajo
                 pacman.setSigPos(2);
             }
         } else {
+            //significa que el swipe fue horizontal
             if (xDiff < 0) {
+                //el swipe fue para la izquierda
                 pacman.setSigPos(3);
 
             } else if (xDiff > 0) {
+                //el swipe fue para la derecha
                 pacman.setSigPos(1);
-
             }
         }
     }
@@ -336,9 +280,7 @@ public class DrawingView extends SurfaceView implements Runnable {
             for (int j = 0; j < 17; j++) {
                 x = j * blockSize;
                 y = i * blockSize;
-                // Draws pellet in the middle of a block
-                /*Se verifica con 16 ya que las unicas posiciones que daran 0 en esta evaluacion
-                 * son los bloques que tienen el valor 2 ( spawn del pacman) y 0 en la matriz.*/
+                /*Se dibujan en las posiciones de la matriz que tengan un bit asertado en 16*/
                 if ((currentMap[i][j] & 16) != 0) {
                     canvas.drawCircle(x + blockSize / 2, y + blockSize / 2, blockSize / 10, paint);
                 }
@@ -347,10 +289,11 @@ public class DrawingView extends SurfaceView implements Runnable {
     }
 
     public static void drawPowerUp(Canvas canvas, short[][] currentMap, Paint paint, int blockSize) {
-        int x, y;
+        int x = 0, y = 3;
         paint.setColor(Color.YELLOW);
-        x = 0;
-        y = 3;
+        /*Las posiciones de los power up estan fijas, por lo tanto en este metodo
+         * se ve si dichas posiciones tienen asertado un bit en 32, lo que indica
+         * un power up disponible*/
         if ((currentMap[y][x] & 32) != 0) {
             y *= blockSize;
             canvas.drawCircle(x + blockSize / 2, y + blockSize / 2, blockSize / 3, paint);
@@ -397,10 +340,6 @@ public class DrawingView extends SurfaceView implements Runnable {
 
     private void dibujarVidas() {
         int vida = pacman.getVida();
-
-
-
-
         for (int i = 0; i < vida; i++) {
             int x = 19 * blockSize;
             int y = i * blockSize;
@@ -410,9 +349,12 @@ public class DrawingView extends SurfaceView implements Runnable {
 
     private void verificarVictoria() {
         int cantidadPellets = Globals.getInstance().getCantidadPellets();
+        int score = Globals.getInstance().getScore();
         if (cantidadPellets == 0) {
             canDraw = false;
-            Intent victoria = new Intent(context, MainActivity.class);
+            Globals.getInstance().setFrutaActiva(false);
+            Intent victoria = new Intent(context, Victoria.class);
+            victoria.putExtra("score",score);
             context.startActivity(victoria);
         }
     }
@@ -420,8 +362,20 @@ public class DrawingView extends SurfaceView implements Runnable {
     private void verificarDerrota() {
         if (pacman.getVida() == 0) {
             canDraw = false;
-            Intent derrota = new Intent(context, MainActivity.class);
+            int score = Globals.getInstance().getScore();
+            Intent derrota = new Intent(context, Derrota.class);
+            derrota.putExtra("score",score);
+            Globals.getInstance().setFrutaActiva(false);
             context.startActivity(derrota);
         }
+    }
+
+    private void iniciarSonido() {
+        mover = MediaPlayer.create(context, R.raw.pacmanwaka);
+        mover.setVolume(100, 100);
+
+        inicio = MediaPlayer.create(context, R.raw.songinicio);
+        inicio.setVolume(100, 100);
+        inicio.start();
     }
 }

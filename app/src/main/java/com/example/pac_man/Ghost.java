@@ -5,107 +5,106 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.view.SurfaceHolder;
 
 import java.util.Random;
 
-public class Ghost implements Runnable{
+public class Ghost implements Runnable {
     private int tipoGhost;
-    private int blockSize,screenWidth,posX,posY,posActual,sigPos,direccion,tiempoSleep,esperarComienzo;
+    private int blockSize, screenWidth, posX, posY, posActual, sigPos, direccion;
     private Context context;
-    private SurfaceHolder surfaceHolder;
-    private int[] patronMov;
     private Pacman pacman;
     private Paint paint;
     private Canvas canvas;
-    private boolean reset,vulnerable;
-    private Bitmap bitGhost,bitAzul;
-    private short[][] map;
-    public Ghost(int blockSize, int screenWidth, Context context ,Pacman pacman,short[][] map,int tipo){
-        this.blockSize=blockSize;
-        this.screenWidth=screenWidth;
-        this.context=context;
-        this.map=map;
-        this.pacman=pacman;
-        this.tipoGhost=tipo;
-        reset=false;
-        sigPos=4;
-        vulnerable=false;
+    private boolean reset, vulnerable;
+    private Bitmap bitGhost, bitAzul;
+
+    public Ghost(int blockSize, int screenWidth, Context context, Pacman pacman, int tipo) {
+        this.blockSize = blockSize;
+        this.screenWidth = screenWidth;
+        this.context = context;
+        this.pacman = pacman;
+        this.tipoGhost = tipo;
+        reset = false;
+        sigPos = 4;
+        vulnerable = false;
         crearBitmaps();
-
-
-
-
-
     }
-    public void run(){
+
+    public void run() {
         iniciarFantasma();
+        //mientras que el fantasma no halla colisionado con el pacman
         while (!reset) {
             dormir(800);
             sigPos = sigMovimiento();
         }
 
     }
-    public boolean getReset(){
+
+    public boolean getReset() {
         return reset;
     }
-    public void setReset(boolean reset){
-        this.reset=reset;
+
+    public void setReset(boolean reset) {
+        this.reset = reset;
     }
-    public void iniciarFantasma(){
-        reset=false;
-        sigPos=4;
-        switch (tipoGhost){
+
+    public void iniciarFantasma() {
+        reset = false;
+        sigPos = 4;
+        switch (tipoGhost) {
             case 0:
-                posX=6*blockSize;
-                posY=9*blockSize;
+                posX = 6 * blockSize;
+                posY = 9 * blockSize;
                 dormir(5000); // tiempo que espera para comenzar a moverse
-                sigPos=1;
+                sigPos = 1;
                 dormir(500);
-                sigPos=0;
+                sigPos = 0;
                 break;
             case 1:
-                posX=8*blockSize;
-                posY=9*blockSize;
+                posX = 8 * blockSize;
+                posY = 9 * blockSize;
                 dormir(10000); // tiempo que espera para comenzar a moverse
-                sigPos=0;
+                sigPos = 0;
                 break;
             case 2:
-                posX=10*blockSize;
-                posY=9*blockSize;
+                posX = 10 * blockSize;
+                posY = 9 * blockSize;
                 dormir(15000); // tiempo que espera para comenzar a moverse
-                sigPos=3;
+                sigPos = 3;
                 dormir(500);
-                sigPos=0;
+                sigPos = 0;
                 break;
             case 3:
-                posX=8*blockSize;
-                posY=7*blockSize;
+                posX = 8 * blockSize;
+                posY = 7 * blockSize;
 
                 break;
         }
     }
-    private int sigMovimiento(){
-        Random rnd=new Random();
+
+    private int sigMovimiento() {
+        Random rnd = new Random();
         return rnd.nextInt(4);
     }
 
 
-    public void drawGhost (Canvas canvas,Context context,Paint paint,Movement movement) {
+    public void drawGhost(Canvas canvas, Context context, Paint paint, Movement movement) {
         movement.moveGhost(this);
         canvas.drawBitmap(bitGhost, posX, posY, paint);
         movement.chocarPacman(this);
         movement.updateGhost(this);
 
     }
-    public void drawGhostAzul (Canvas canvas,Context context,Paint paint,Movement movement) {
+
+    public void drawGhostAzul(Canvas canvas, Context context, Paint paint, Movement movement) {
         movement.moveGhost(this);
         canvas.drawBitmap(bitAzul, posX, posY, paint);
         movement.chocarPacman(this);
         movement.updateGhost(this);
 
     }
-    public void dormir(int millis){
+
+    public void dormir(int millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
@@ -114,30 +113,32 @@ public class Ghost implements Runnable{
     }
 
 
-
-
-    private void crearBitmaps(){
-        int spriteSize = screenWidth/17;        // Size of Pacman & Ghost
-        spriteSize = (spriteSize / 5) * 5;      // Keep it a multiple of 5
-        switch (tipoGhost){
-            case 0: bitGhost= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
-                    context.getResources(), R.drawable.clyde), spriteSize, spriteSize, false);
-            break;
-            case 1: bitGhost= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
-                    context.getResources(), R.drawable.pinky), spriteSize, spriteSize, false);
-            break;
-            case 2: bitGhost= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
-                    context.getResources(), R.drawable.inky), spriteSize, spriteSize, false);
-            break;
-            case 3: bitGhost= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
-                    context.getResources(), R.drawable.blinky), spriteSize, spriteSize, false);
-            break;
+    private void crearBitmaps() {
+        int spriteSize = screenWidth / 17;
+        spriteSize = (spriteSize / 5) * 5;
+        switch (tipoGhost) {
+            case 0:
+                bitGhost = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+                        context.getResources(), R.drawable.clyde), spriteSize, spriteSize, false);
+                break;
+            case 1:
+                bitGhost = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+                        context.getResources(), R.drawable.pinky), spriteSize, spriteSize, false);
+                break;
+            case 2:
+                bitGhost = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+                        context.getResources(), R.drawable.inky), spriteSize, spriteSize, false);
+                break;
+            case 3:
+                bitGhost = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+                        context.getResources(), R.drawable.blinky), spriteSize, spriteSize, false);
+                break;
         }
-        bitAzul= Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
+        bitAzul = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 context.getResources(), R.drawable.blue_ghost), spriteSize, spriteSize, false);
     }
 
-
+    //Metodos de modificacion y observacion
     public int getBlockSize() {
         return blockSize;
     }
@@ -154,7 +155,7 @@ public class Ghost implements Runnable{
         this.vulnerable = vulnerable;
     }
 
-    public int getTipoGhost(){
+    public int getTipoGhost() {
         return this.tipoGhost;
     }
 
@@ -169,7 +170,6 @@ public class Ghost implements Runnable{
     public int getPosY() {
         return posY;
     }
-
 
 
     public void setPosY(int posY) {
@@ -192,13 +192,6 @@ public class Ghost implements Runnable{
         this.sigPos = sigPos;
     }
 
-    public int[] getPatronMov() {
-        return patronMov;
-    }
-
-    public void setPatronMov(int[] patronMov) {
-        this.patronMov = patronMov;
-    }
 
     public Pacman getPacman() {
         return pacman;

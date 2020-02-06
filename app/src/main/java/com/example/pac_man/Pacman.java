@@ -58,10 +58,9 @@ public class Pacman {
         movement.updatePacman();
     }
     private void crearBitmapImgPacman() {
-        int spriteSize = screenWidth/17;        // Size of Pacman & Ghost
-        spriteSize = (spriteSize / 5) * 5;      // Keep it a multiple of 5
+        int spriteSize = screenWidth/17;        // size del pacman
+        spriteSize = (spriteSize / 5) * 5;
 
-        // Add bitmap images of pacman facing right
         pacmanRight = new Bitmap[totalFrame];
         pacmanRight[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 contextPlayAct.getResources(), R.drawable.pacman_right1), spriteSize, spriteSize, false);
@@ -71,7 +70,6 @@ public class Pacman {
                 contextPlayAct.getResources(), R.drawable.pacman_right3), spriteSize, spriteSize, false);
         pacmanRight[3] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 contextPlayAct.getResources(), R.drawable.pacman_right), spriteSize, spriteSize, false);
-        // Add bitmap images of pacman facing down
         pacmanDown = new Bitmap[totalFrame];
         pacmanDown[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 contextPlayAct.getResources(), R.drawable.pacman_down1), spriteSize, spriteSize, false);
@@ -81,7 +79,6 @@ public class Pacman {
                 contextPlayAct.getResources(), R.drawable.pacman_down3), spriteSize, spriteSize, false);
         pacmanDown[3] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 contextPlayAct.getResources(), R.drawable.pacman_down), spriteSize, spriteSize, false);
-        // Add bitmap images of pacman facing left
         pacmanLeft = new Bitmap[totalFrame];
         pacmanLeft[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 contextPlayAct.getResources(), R.drawable.pacman_left1), spriteSize, spriteSize, false);
@@ -91,7 +88,6 @@ public class Pacman {
                 contextPlayAct.getResources(), R.drawable.pacman_left3), spriteSize, spriteSize, false);
         pacmanLeft[3] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 contextPlayAct.getResources(), R.drawable.pacman_left), spriteSize, spriteSize, false);
-        // Add bitmap images of pacman facing up
         pacmanUp = new Bitmap[totalFrame];
         pacmanUp[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(
                 contextPlayAct.getResources(), R.drawable.pacman_up1), spriteSize, spriteSize, false);
@@ -104,10 +100,12 @@ public class Pacman {
     }
 
     public void muerte(){
+        //Se situa al pacman en su posicion inicial
         posX = 8 * blockSize;
         posY = 13 * blockSize;
     }
 
+    //Metodos de modificacion y observacion
     public boolean getPowerUp() {
         return powerUp;
     }

@@ -14,17 +14,9 @@ public class PlayActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Display display = getWindowManager().getDefaultDisplay();
-
-        // Carga la resolucion dentro de un objeto Point
-        Point size = new Point();
-        display.getSize(size);
-        drawV=new DrawingView(this,size.x,size.y);
+        drawV=new DrawingView(this);
         setContentView(drawV);
-
-
     }
-
 
 
 }

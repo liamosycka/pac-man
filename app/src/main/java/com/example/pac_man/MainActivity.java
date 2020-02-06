@@ -26,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
     }*/
 
     public void exit(View view){
-     finish();
+        finish();
+        System.exit(0);
+
     }
 }

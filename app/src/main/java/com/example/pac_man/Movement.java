@@ -6,108 +6,86 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Movement {
     private Pacman pacman;
-    private int blockSize;
+    private int blockSize,swipeDir;
     private short [][] currentMap;
-    private int swipeDir;
-    private boolean pelletEaten,powerUp;
     private Ghost[] arrGhosts;
-    private AtomicInteger varAtomic;
 
     public Movement(final short [][] curMap, final int blockSize,Pacman pacM,Ghost[] ghosts){
         currentMap = curMap;
         this.blockSize = blockSize;
         this.pacman = pacM;
         this.arrGhosts=ghosts;
-       // ghost0 = new Ghost(blockSize);
-       // ghost1 = new Ghost(blockSize);
-       // ghost2 = new Ghost(blockSize);
-       // ghost3 = new Ghost(blockSize);
-
         swipeDir = 4;
-        pelletEaten = false;
-        powerUp=false;
-        varAtomic=new AtomicInteger();
     }
 
-
     public void movePacman(){
-        short ch;
+        short posMatriz;
         int nextDirection = pacman.getSigPos();
         int xPosPacman = pacman.getPosX();
         int yPosPacman = pacman.getPosY();
-
-        // This was based on the non-Android Pacman legacy project for CS56
-        // Check if xPos and yPos of pacman is both a multiple of block size
+        //verifica si el pacman esta en un bloque valido
         if ( (xPosPacman % blockSize == 0) && (yPosPacman  % blockSize == 0) ) {
-
-            // When pacman goes through tunnel on
-            // the right reappear at left tunnel
+            //vemos si el pacman se fue por el tunel de la derecha
             if (xPosPacman >= blockSize * 17) {
                 xPosPacman = 0;
                 pacman.setPosX(0);
             }
-
-            // Is used to find the number in the level array in order to
-            // check wall placement, pellet placement, and candy placement
-            ch = currentMap[yPosPacman / blockSize][xPosPacman / blockSize];
-
-            // If there is a pellet, eat it
-            if ((ch & 16) != 0) {
-
-                // Toggle pellet so it won't be drawn anymore
-                /*aqui se verifico que la posicion actual contiene pastilla, ya que el "&" da distinto de 0,
-                * por lo tanto el pacman la comera. Esta pastilla comida ya no debe ser dibujada, por este motivo,
-                * se manda como paremetro la posActual elevado a la 16 para asegurar que en binario no haya un 1 en
-                * la posicion del 16 asi (posM & 16) siempre dara 0.*/
-                pelletWasEaten(yPosPacman / blockSize, xPosPacman / blockSize, (short) (ch ^ 16));
+            posMatriz = currentMap[yPosPacman / blockSize][xPosPacman / blockSize];
+            // Si en la posicion de la matriz hay un bit asertado en 16, significa que hay una pellet y la come
+            if ((posMatriz & 16) != 0) {
+                /*Esta pellet comida ya no debe ser dibujada, por este motivo,
+                * se manda como paremetro el valor de la posMatriz elevado a la 16 para asegurar que deje de
+                * existir un bit asertado en 16.*/
+                pelletComida(yPosPacman / blockSize, xPosPacman / blockSize, (short) (posMatriz ^ 16));
             }
-            if((ch&32)!=0){
-                powerUpComido(yPosPacman/blockSize,xPosPacman/blockSize,(short)(ch^32),8);
+            //Si en la posicion de la matriz hay un bit asertado en 32, significa que hay un powerUp disponible, y lo come
+            if((posMatriz&32)!=0){
+                //en la posMatriz se guardara el valor que habia elevado a la 32 para que deje de asertar el bit en 32
+                powerUpComido(yPosPacman/blockSize,xPosPacman/blockSize,(short)(posMatriz^32),8);
             }
-            if((ch&512)!=0){
+            //Si en la posicion de la matriz hay un bit asertado en 512, significa que hay una fruta activa, y la come
+            if((posMatriz&512)!=0){
+                /*en la posicion de la matriz donde esta la fruta, se le asigna 1026, que tiene un bit asertado en 1024,
+                * que indica que la fruta no esta activa*/
+
                 Globals.getInstance().setFrutaActiva(false);
                 Globals.getInstance().aumentarScore(100);
                 currentMap[yPosPacman/blockSize][xPosPacman/blockSize]=1026;
             }
-
-            // Checks for direction buffering
             /*Aqui se verifica si el pacman se esta moviendo a una posicion valida, ya que ,
             * si la sigPos==3 significa que el pacman se movera a la izquierda, por lo tanto, se debe
-            * verificar que en la posicion actual de la matriz (posM) NO se haya dibujado una pared a la
-            * izquierda ( que se dibujan cuando (posM % 1)!=0 ) )  */
-            if (!((nextDirection == 3 && (ch & 1) != 0) ||
-                    (nextDirection == 1 && (ch & 4) != 0) ||
-                    (nextDirection == 0 && (ch & 2) != 0) ||
-                    (nextDirection == 2 && (ch & 8) != 0))) {
+            * verificar que en la posicion actual de la matriz (posMatriz) NO se haya dibujado una pared a la
+            * izquierda ( que no tiene un bit asertado en 1 )  */
+            if (!((nextDirection == 3 && (posMatriz & 1) != 0) ||
+                    (nextDirection == 1 && (posMatriz & 4) != 0) ||
+                    (nextDirection == 0 && (posMatriz & 2) != 0) ||
+                    (nextDirection == 2 && (posMatriz & 8) != 0))) {
                 pacman.setPosActual(nextDirection);
                 swipeDir = nextDirection;
             }
 
-            // Checks for wall collisions
+            //Verifica colisiones con paredes
             /*Aqui se verifica si en la direccion que el pacman se esta por mover, HAY una pared, ya que,
             * al ser por ej swipeDir==1 ( el pacman se mueve a la derecha) verifica si la posicion actual
-            * de la matriz ( pos donde esta el pacman) se le ha dibujado una pared a la derecha , en caso afirmativo
+            * de la matriz ( posicion donde esta el pacman) se le ha dibujado una pared a la derecha , en caso afirmativo
             * se le asignara a swipeDir=4, que significa que no se mueva ( no hay caso en el switch para 4, en drawPacman) */
-            if ((swipeDir == 3 && (ch & 1) != 0) ||
-                    (swipeDir == 1 && (ch & 4) != 0) ||
-                    (swipeDir == 0 && (ch & 2) != 0) ||
-                    (swipeDir == 2 && (ch & 8) != 0)||
-                    (swipeDir==2&&(ch&256)!=0)){
+            if ((swipeDir == 3 && (posMatriz & 1) != 0) ||
+                    (swipeDir == 1 && (posMatriz & 4) != 0) ||
+                    (swipeDir == 0 && (posMatriz & 2) != 0) ||
+                    (swipeDir == 2 && (posMatriz & 8) != 0)||
+                    (swipeDir==2&&(posMatriz&256)!=0)){
                 swipeDir = 4;
             }
         }
 
-        // When pacman goes through tunnel on
-        // the left reappear at right tunnel
+        //verifica si el pacman se fue por el tunel de la izquierda
         if (xPosPacman < 0) {
-            xPosPacman = blockSize * 17;
             pacman.setPosX(blockSize * 17);
         }
     }
 
-    //call method after we have moved and drawn pacman
     public void updatePacman(){
-        // Depending on the direction move the position of pacman
+
         if (swipeDir == 0) {
             pacman.setPosY(pacman.getPosY() + -blockSize/15); /*se disminuye porque se debe ir a posiciones de la matriz mas bajas, ya que
                                                                 se esta subiendo*/
@@ -119,8 +97,9 @@ public class Movement {
             pacman.setPosX(pacman.getPosX() + -blockSize/15);
         }
     }
+    //misma logica que en movePacman
     public void moveGhost(Ghost ghost) {
-        int ch;
+        int posMatriz;
         int posX=ghost.getPosX();
         int posY=ghost.getPosY();
         int sigPos=ghost.getSigPos();
@@ -131,31 +110,20 @@ public class Movement {
                 ghost.setPosX(0);
 
             }
-
-            // Is used to find the number in the level array in order to
-            // check wall placement, pellet placement, and candy placement
-            ch = currentMap[posY / blockSize][posX / blockSize];
-
-
-            if (!((sigPos == 3 && (ch & 1) != 0) ||
-                    (sigPos == 1 && (ch & 4) != 0) ||
-                    (sigPos == 0 && (ch & 2) != 0) ||
-                    (sigPos == 2 && (ch & 8) != 0))) {
+            posMatriz = currentMap[posY / blockSize][posX / blockSize];
+            if (!((sigPos == 3 && (posMatriz & 1) != 0) ||
+                    (sigPos == 1 && (posMatriz & 4) != 0) ||
+                    (sigPos == 0 && (posMatriz & 2) != 0) ||
+                    (sigPos == 2 && (posMatriz & 8) != 0))) {
                 ghost.setPosActual(sigPos);
                 ghost.setDireccion(sigPos);
             }
-
-            // Checks for wall collisions
-            /*Aqui se verifica si en la direccion que el pacman se esta por mover, HAY una pared, ya que,
-             * al ser por ej swipeDir==1 ( el pacman se mueve a la derecha) verifica si la posicion actual
-             * de la matriz ( pos donde esta el pacman) se le ha dibujado una pared a la derecha , en caso afirmativo
-             * se le asignara a swipeDir=4, que significa que no se mueva ( no hay caso en el switch para 4, en drawPacman) */
             int direccion=ghost.getDireccion();
-            if ((direccion == 3 && (ch & 1) != 0) ||
-                    (direccion == 1 && (ch & 4) != 0) ||
-                    (direccion == 0 && (ch & 2) != 0) ||
-                    (direccion == 2 && (ch & 8) != 0) ||
-                    (direccion==2&&(ch&256)!=0)) {
+            if ((direccion == 3 && (posMatriz & 1) != 0) ||
+                    (direccion == 1 && (posMatriz & 4) != 0) ||
+                    (direccion == 0 && (posMatriz & 2) != 0) ||
+                    (direccion == 2 && (posMatriz & 8) != 0) ||
+                    (direccion==2&&(posMatriz&256)!=0)) {
                 ghost.setDireccion(4);
             }
         }
@@ -181,14 +149,11 @@ public class Movement {
     public void chocarPacman(Ghost ghost) {
         int posX=ghost.getPosX();
         int posY=ghost.getPosY();
-        int posActual=ghost.getPosActual();
 
         if (((posX / blockSize) == (pacman.getPosX() / blockSize)) &&
                 ((posY / blockSize) == (pacman.getPosY() / blockSize)) && !pacman.getPowerUp()) {
             pacman.muerte();
-
             Globals.getInstance().setReiniciarJuego(true);
-
         }
         if (((posX / blockSize) == (pacman.getPosX() / blockSize)) &&
                 ((posY / blockSize) == (pacman.getPosY() / blockSize))) {
@@ -196,46 +161,29 @@ public class Movement {
                 //el pacman tiene el power up
                 ghost.setVulnerable(false);
                 ghost.setReset(true);
-                Globals.getInstance().setGhostComido(ghost.getTipoGhost(),true);
                 Globals.getInstance().aumentarScore(200);
             }else{
                 pacman.muerte();
                 Globals.getInstance().setReiniciarJuego(true);
             }
-
-
-
         }
     }
 
-    public short[][] updateMap(){
-        pelletEaten = false;
-        return currentMap;
-    }
-    public short[][] actualizarMapaPowerUp(){
-        powerUp=false;
-        return currentMap;
-    }
-    private void pelletWasEaten(int x, int y, short value){
-        /*Como el valor que llega como parametro es un multiplo de 16, eso hara que (al igual que
-        * cuando en la matriz hay valor 2 o 0 ) no se dibuje una pastilla.*/
+
+    private void pelletComida(int x, int y, short value){
         currentMap[x][y] = value;
-        pelletEaten = true;
         Globals.getInstance().aumentarScore(10);
-        Globals.getInstance().disminuirPellet(1);
+        Globals.getInstance().disminuirPellet();
     }
     private void powerUpComido(int x, int y, short value,int duracionSeg) {
-        /*Como el valor que llega como parametro no contiene un 1 en la posicion de 32, eso hara que (al igual que
-         * cuando en la matriz hay valor 2 o 0 ) no se dibuje una pastilla.*/
         if (!pacman.getPowerUp()) {
 
             Globals.getInstance().aumentarScore(50);
-            Globals.getInstance().disminuirPellet(1);
+            Globals.getInstance().disminuirPellet();
             currentMap[x][y] = value;
             pacman.setPowerUp(true);
             for(int i=0;i<arrGhosts.length;i++){
                 arrGhosts[i].setVulnerable(true);
-                Globals.getInstance().setGhostComido(i,false);
             }
             new Timer().schedule(new TimerTask() {
                 @Override
@@ -247,10 +195,4 @@ public class Movement {
         }
     }
 
-    public boolean needMapRefresh(){
-        return pelletEaten;
-    }
-    public boolean verifPowerUp(){
-        return powerUp;
-    }
 }
