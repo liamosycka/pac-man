@@ -57,7 +57,11 @@ public class DrawingView extends SurfaceView implements Runnable {
     public DrawingView(Context context) {
         super(context);
         arrGhosts = new Ghost[cantGhosts];
-        //iniciarSonido();
+        mover= MediaPlayer.create(context,R.raw.pacmanwaka);
+        mover.setVolume(100,100);
+        inicio = MediaPlayer.create(context, R.raw.songinicio);
+        inicio.setVolume(100, 100);
+        inicio.start();
         paint = new Paint();
         this.context = context;
         frameTicker = 1000 / totalFrame; //para saber cuando se actualizo por ultima vez el frame
@@ -69,7 +73,7 @@ public class DrawingView extends SurfaceView implements Runnable {
         pacman = new Pacman(blockSize, screenWidth, context);
 
         iniciarFantasmas();
-        movement = new Movement(map, blockSize, pacman, arrGhosts);
+        movement = new Movement(map, blockSize, pacman, arrGhosts,context);
         contarPellets(map, blockSize);
         crearBitmaps();
         thread = new Thread(this);
@@ -110,6 +114,7 @@ public class DrawingView extends SurfaceView implements Runnable {
                 canvas.drawText("Score: " + score, 7 * blockSize, 22 * blockSize, paint);
                 //verifica si el pacman choco un fantasma
                 if (Globals.getInstance().getReiniciarJuego()) {
+                    mover.pause();
                     for (int i = 0; i < arrGhosts.length; i++) {
                         arrGhosts[i].setReset(true);
                         iniciarFantasmas();
@@ -227,6 +232,9 @@ public class DrawingView extends SurfaceView implements Runnable {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         pacman.setPacmanInicio(false);
+        if(!inicio.isPlaying()){
+            mover.start();
+        }
         switch (event.getAction()) {
             /*indica que ha comenzado una accion en el tactil,
              * indicando la posicion inicial donde se origino*/
@@ -359,6 +367,7 @@ public class DrawingView extends SurfaceView implements Runnable {
         //verifica si se perdio la partida
         if (pacman.getVida() == 0) {
             canDraw = false;
+            mover.stop();
             int score = Globals.getInstance().getScore();
             Intent derrota = new Intent(context, Derrota.class);
             derrota.putExtra("score",score);
@@ -371,6 +380,7 @@ public class DrawingView extends SurfaceView implements Runnable {
         int score = Globals.getInstance().getScore();
         if (cantidadPellets == 0) {
             canDraw = false;
+            mover.stop();
             Globals.getInstance().setFrutaActiva(false);
             Intent victoria = new Intent(context, Victoria.class);
             victoria.putExtra("score",score);
@@ -379,14 +389,7 @@ public class DrawingView extends SurfaceView implements Runnable {
         }
     }
 
-
-  /*  private void iniciarSonido() {
-        inicio = MediaPlayer.create(context, R.raw.songinicio);
-        inicio.setVolume(100, 100);
-        inicio.start();
-    }*/
-
-    /*public void pause(){
+        /*public void pause(){
         canDraw = false;
         thread = null;
     }

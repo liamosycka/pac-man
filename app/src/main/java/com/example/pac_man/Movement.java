@@ -1,5 +1,6 @@
 package com.example.pac_man;
 
+import android.content.Context;
 import android.media.MediaPlayer;
 
 import java.util.Timer;
@@ -9,10 +10,13 @@ public class Movement {
     private Pacman pacman;
     private int blockSize,swipeDir;
     private short [][] currentMap;
+    private MediaPlayer waka;
     private Ghost[] arrGhosts;
 
-    public Movement(final short [][] curMap, final int blockSize,Pacman pacM,Ghost[] ghosts){
+    public Movement(final short [][] curMap, final int blockSize,Pacman pacM,Ghost[] ghosts, Context context){
         currentMap = curMap;
+        this.waka = MediaPlayer.create(context,R.raw.pacmanwaka);
+        this.waka.setVolume(100,100);
         this.blockSize = blockSize;
         this.pacman = pacM;
         this.arrGhosts=ghosts;
@@ -37,6 +41,7 @@ public class Movement {
                 /*Esta pellet comida ya no debe ser dibujada, por este motivo,
                 * se manda como paremetro el valor de la posMatriz elevado a la 16 para asegurar que deje de
                 * existir un bit asertado en 16.*/
+
                 pelletComida(yPosPacman / blockSize, xPosPacman / blockSize, (short) (posMatriz ^ 16));
             }
 
