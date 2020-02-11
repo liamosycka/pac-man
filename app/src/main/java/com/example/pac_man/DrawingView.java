@@ -67,6 +67,7 @@ public class DrawingView extends SurfaceView implements Runnable {
         blockSize = (blockSize / 5) * 5;
         surfaceHolder = getHolder();
         pacman = new Pacman(blockSize, screenWidth, context);
+
         iniciarFantasmas();
         movement = new Movement(map, blockSize, pacman, arrGhosts);
         contarPellets(map, blockSize);
@@ -97,7 +98,12 @@ public class DrawingView extends SurfaceView implements Runnable {
                 drawMap(canvas);
                 drawPellets(canvas, map, paint, blockSize);
                 drawPowerUp(canvas, map, paint, blockSize);
-                pacman.drawPacman(canvas, context, paint, currentPacmanFrame, movement);
+                if(pacman.getPacmanInicio()) {
+                   pacman.pacmanInicio(canvas,context,paint);
+
+                }else{
+                    pacman.drawPacman(canvas, context, paint, currentPacmanFrame, movement);
+                }
                 dibujarVidas();
                 score = Globals.getInstance().getScore();
                 paint.setTextSize(60f);
@@ -107,6 +113,7 @@ public class DrawingView extends SurfaceView implements Runnable {
                     for (int i = 0; i < arrGhosts.length; i++) {
                         arrGhosts[i].setReset(true);
                         iniciarFantasmas();
+                        pacman.setPacmanInicio(true);
                     }
                     pacman.setVida(pacman.getVida() - 1);
                     if (pacman.getVida() == 0) {
@@ -148,8 +155,8 @@ public class DrawingView extends SurfaceView implements Runnable {
             }
             updateFrame(System.currentTimeMillis());
             //se resolvio hacer 1 solo metodo verificarSituacion que haga ambas
-            verificarVictoria();
-            verificarDerrota();
+
+            verificarEstado();
 
             surfaceHolder.unlockCanvasAndPost(canvas);
 
@@ -219,6 +226,7 @@ public class DrawingView extends SurfaceView implements Runnable {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        pacman.setPacmanInicio(false);
         switch (event.getAction()) {
             /*indica que ha comenzado una accion en el tactil,
              * indicando la posicion inicial donde se origino*/
@@ -347,7 +355,18 @@ public class DrawingView extends SurfaceView implements Runnable {
         }
     }
 
-    private void verificarVictoria() {
+    private void verificarEstado(){
+        //verifica si se perdio la partida
+        if (pacman.getVida() == 0) {
+            canDraw = false;
+            int score = Globals.getInstance().getScore();
+            Intent derrota = new Intent(context, Derrota.class);
+            derrota.putExtra("score",score);
+            Globals.getInstance().setFrutaActiva(false);
+            context.startActivity(derrota);
+            ((PlayActivity)context).finish();
+        }
+        //verifica si se gano la partida
         int cantidadPellets = Globals.getInstance().getCantidadPellets();
         int score = Globals.getInstance().getScore();
         if (cantidadPellets == 0) {
@@ -356,26 +375,28 @@ public class DrawingView extends SurfaceView implements Runnable {
             Intent victoria = new Intent(context, Victoria.class);
             victoria.putExtra("score",score);
             context.startActivity(victoria);
+            ((PlayActivity)context).finish();
         }
     }
 
-    private void verificarDerrota() {
-        if (pacman.getVida() == 0) {
-            canDraw = false;
-            int score = Globals.getInstance().getScore();
-            Intent derrota = new Intent(context, Derrota.class);
-            derrota.putExtra("score",score);
-            Globals.getInstance().setFrutaActiva(false);
-            context.startActivity(derrota);
-        }
-    }
 
-    private void iniciarSonido() {
-        mover = MediaPlayer.create(context, R.raw.pacmanwaka);
-        mover.setVolume(100, 100);
-
+  /*  private void iniciarSonido() {
         inicio = MediaPlayer.create(context, R.raw.songinicio);
         inicio.setVolume(100, 100);
         inicio.start();
+    }*/
+
+    /*public void pause(){
+        canDraw = false;
+        thread = null;
     }
+
+    public void resume(){
+        if(thread==null) {
+            thread = new Thread(this);
+        }
+        thread.start();
+        canDraw=true;
+    }*/
+
 }

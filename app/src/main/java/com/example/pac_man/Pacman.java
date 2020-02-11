@@ -11,11 +11,12 @@ public class Pacman {
     private int blockSize,posX,posY,posActual,sigPos,totalFrame,screenWidth,vida;
     private Bitmap[] pacmanRight, pacmanDown, pacmanLeft, pacmanUp;
     private Context contextPlayAct;
-    private boolean powerUp;
+    private boolean powerUp,inicio;
 
     public Pacman(int blockS,int screenWidth,Context context){
         this.blockSize=blockS;
         this.powerUp=false;
+        this.inicio=true;
         this.vida = 3;
         this.screenWidth=screenWidth;
         this.contextPlayAct=context;
@@ -57,6 +58,11 @@ public class Pacman {
         * del pacman.*/
         movement.updatePacman();
     }
+
+    public void pacmanInicio(Canvas canvas, Context context, Paint paint){
+        canvas.drawBitmap(pacmanLeft[2],posX,posY,paint);
+    }
+
     private void crearBitmapImgPacman() {
         int spriteSize = screenWidth/17;        // size del pacman
         spriteSize = (spriteSize / 5) * 5;
@@ -103,6 +109,7 @@ public class Pacman {
         //Se situa al pacman en su posicion inicial
         posX = 8 * blockSize;
         posY = 13 * blockSize;
+
     }
 
     //Metodos de modificacion y observacion
@@ -160,6 +167,14 @@ public class Pacman {
 
     public void setTotalFrame(int totalFrame) {
         this.totalFrame = totalFrame;
+    }
+
+    public boolean getPacmanInicio(){
+        return this.inicio;
+    }
+
+    public void setPacmanInicio(boolean ini){
+        this.inicio=ini;
     }
 
     public int getVida(){

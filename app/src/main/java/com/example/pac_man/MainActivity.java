@@ -18,12 +18,8 @@ public class MainActivity extends AppCompatActivity {
     public void playGame (View view){
         Intent play = new Intent(this, PlayActivity.class);
         startActivity(play);
+        finish();
     }
-
-    /*public void highScore(View view){
-        Intent score = new Intent(this,HighScore.class);
-        startActivity(score);
-    }*/
 
     public void exit(View view){
         finish();

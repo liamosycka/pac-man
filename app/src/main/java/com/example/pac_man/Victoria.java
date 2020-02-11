@@ -23,11 +23,12 @@ public class Victoria extends AppCompatActivity {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
+                Globals.getInstance().setScore(0);
               startActivity(inicio);
               finish();
 
             }
-        }, 5000);
+        }, 3000);
     }
 
 

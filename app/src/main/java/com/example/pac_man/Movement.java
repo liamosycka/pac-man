@@ -1,8 +1,9 @@
 package com.example.pac_man;
 
+import android.media.MediaPlayer;
+
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Movement {
     private Pacman pacman;
@@ -38,6 +39,8 @@ public class Movement {
                 * existir un bit asertado en 16.*/
                 pelletComida(yPosPacman / blockSize, xPosPacman / blockSize, (short) (posMatriz ^ 16));
             }
+
+
             //Si en la posicion de la matriz hay un bit asertado en 32, significa que hay un powerUp disponible, y lo come
             if((posMatriz&32)!=0){
                 //en la posMatriz se guardara el valor que habia elevado a la 32 para que deje de asertar el bit en 32

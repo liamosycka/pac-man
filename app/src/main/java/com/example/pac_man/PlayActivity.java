@@ -17,6 +17,15 @@ public class PlayActivity extends AppCompatActivity {
         drawV=new DrawingView(this);
         setContentView(drawV);
     }
-
+    /*@Override
+    protected void onPause(){
+        super.onPause();
+        drawV.pause();
+    }
+    @Override
+    protected void onResume(){
+        super.onResume();
+        drawV.resume();
+    }*/
 
 }
